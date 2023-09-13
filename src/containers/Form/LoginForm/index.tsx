@@ -1,15 +1,18 @@
-import React from "react";
+import React, {useEffect} from "react";
 import { useState } from "react";
 import InputWrapper from "../../../components/input";
 import userValidation from "../../../utils/UserValidation";
+import UserService from "../../../services/UserService";
+import {useNavigate} from "react-router-dom";
 
 export default function LoginForm() {
+    const navigate = useNavigate();
     const [user, setUser] = useState({
         username: '',
         password: ''
     })
 
-    const [errors, setErrors] = useState({
+    const [validate, setValidate] = useState({
         username: {
             error: false,
             message: ''
@@ -17,6 +20,9 @@ export default function LoginForm() {
         password: {
             error: false,
             message: ''
+        },
+        buttonStatus: {
+            disabled: true
         }
     })
 
@@ -28,29 +34,43 @@ export default function LoginForm() {
 
     const handleSubmit = (event: any) => {
         event.preventDefault();
-        alert(`username: ${user.username} password: ${user.password}`);
+        checkUserSignIn();
+    }
+
+    const checkUserSignIn =() => {
+        let userService = new UserService();
+        let info = {
+            error: false,
+            message: ''
+        }
+        console.log('check data before call api: '+user.username+' - '+user.password );
+         userService.signIn(user).then( data => {
+             console.log('UserService called: '+data.success+' - '+data.message);
+             if(!data.success){
+                 alert(data.message);
+                 // validate.username.error = true;
+                 // validate.password.error = true;
+                 // validate.username.message = data.message;
+                 // setValidate(validate);
+             }
+         })
+
     }
 
     function validating(fieldName: String, value: String) {
-        console.log('validating is called');
         switch (fieldName) {
             case 'username':
-                userValidation.checkUsername(errors, value);
+                userValidation.checkUsername(validate, value);
                 break;
             case 'password':
-                userValidation.checkPassword(errors, value);
+                userValidation.checkPassword(validate, value);
                 break;
         }
-    }
-
-    function checkStatusButton() {
-        console.log('validating the button is called');
-        return (errors.username.error || errors.password.error);
-    }
+      }
 
     return (
         <div className="container-login">
-            <form onSubmit={handleSubmit} className="form-main-card">
+            <form onSubmit={handleSubmit} onChange={handleChange} className="form-main-card">
                 <div className="form-title">
                     Account Login
                 </div>
@@ -61,8 +81,8 @@ export default function LoginForm() {
                         value={user.username}
                         name="username"
                         placeholder="username"
-                        error={errors.username.error}
-                        errorMessage={errors.username.message}
+                        error={validate.username.error}
+                        errorMessage={validate.username.message}
                         onChange={handleChange} />
                     <InputWrapper
                         type="password"
@@ -70,13 +90,18 @@ export default function LoginForm() {
                         value={user.password}
                         name="password"
                         placeholder="Password"
-                        error={errors.password.error}
-                        errorMessage={errors.password.message}
+                        error={validate.password.error}
+                        errorMessage={validate.password.message}
                         onChange={handleChange} />
                 </div>
+
                 <div className="form-btn-item">
-                    <button className="btn-form" onSubmit={handleSubmit} disabled={checkStatusButton()}>Submit</button>
+                    {/*<div >*/}
+                    {/*    <span>{errorServerMessage.message}</span>*/}
+                    {/*</div>*/}
+                    <button className="btn-form"  onSubmit={handleSubmit} disabled={validate.buttonStatus.disabled}>Submit</button>
                 </div>
+
                 <div className="redirect-link-item">
                     <span>Are you haven't account?</span>
                     <a href="/sign-up">Sign up</a>

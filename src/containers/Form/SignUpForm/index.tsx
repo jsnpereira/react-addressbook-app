@@ -1,24 +1,26 @@
-import React, { useState } from "react"
+import React, { useState} from "react"
 import userValidation from "../../../utils/UserValidation";
 import InputWrapper from "../../../components/input";
+import UserService from "../../../services/UserService";
+import { useNavigate} from "react-router-dom";
 
 
-export default function SignUpForm() {
+
+const SignUpForm = () => {
+    const navigate = useNavigate();
     const [user, setUser] = useState({
         name: '',
-        username: '',
+        email: '',
         password: '',
         confirm: ''
-
     })
-
 
     const [errors, setErrors] = useState({
         name: {
             error: false,
             message: ''
         },
-        username: {
+        email: {
             error: false,
             message: ''
         },
@@ -29,12 +31,15 @@ export default function SignUpForm() {
         confirm: {
             error: false,
             message: ''
+        },
+        buttonStatus: {
+            disabled: true
         }
     })
 
     function checkStatusButton() {
         console.log('validating the button is called');
-        return (errors.username.error || errors.password.error || errors.name.error || errors.confirm.error);
+        return (errors.email.error || errors.password.error || errors.name.error || errors.confirm.error);
     }
 
     const handleChange = (event: any) => {
@@ -48,14 +53,20 @@ export default function SignUpForm() {
 
     const handleSubmit = (event: any) => {
         event.preventDefault();
-        alert(`name: ${user.name} username: ${user.username} password: ${user.password} confirmPassowrd: ${user.confirm}`);
+        let userService = new UserService();
+        userService.createNewUser(user).then((response) => {
+           alert("Status code - create new user: "+ response.status );
+            if(response.status == 201) {
+                navigate('/addressbook');
+            }
+       });
     }
 
     function validating(fieldName: String, value: String) {
         console.log('validating is called');
         switch (fieldName) {
-            case 'username':
-                userValidation.checkUsername(errors, value);
+            case 'email':
+                userValidation.checkEmail(errors, value);
                 break;
             case 'password':
                 userValidation.checkPassword(errors, value);
@@ -91,12 +102,12 @@ export default function SignUpForm() {
 
                         <InputWrapper
                             type="text"
-                            id="username"
-                            value={user.username}
-                            name="username"
-                            placeholder="Username"
-                            error={errors.username.error}
-                            errorMessage={errors.username.message}
+                            id="email"
+                            value={user.email}
+                            name="email"
+                            placeholder="E-mail"
+                            error={errors.email.error}
+                            errorMessage={errors.email.message}
                             onChange={handleChange} />
 
                         <InputWrapper
@@ -122,7 +133,7 @@ export default function SignUpForm() {
 
                     </div>
                     <div className="form-btn-item">
-                        <button className="btn-form" onSubmit={handleSubmit} disabled={checkStatusButton()} >Submit</button>
+                        <button className="btn-form" onSubmit={handleSubmit} disabled={errors.buttonStatus.disabled} >Submit</button>
                     </div>
                     <div className="redirect-link-item">
                         <span>Are you already created your account?</span>
@@ -133,3 +144,5 @@ export default function SignUpForm() {
         </div >
     )
 }
+
+export default SignUpForm;
